@@ -3,41 +3,47 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
-	"translit"
-
+	ud "github.com/fiam/gounidecode/unidecode"
 	flag "github.com/ogier/pflag"
 )
 
-var unspace = flag.BoolP("unspace", "s", false, "Replace whitespace")
-var spacesub = flag.StringP("unspace-sub", "r", "_", "Whitespace replacement")
-var spacecol = flag.BoolP("collapse", "c", false, "Collapse repeated whitespace")
-var infile = flag.StringP("file", "f", "", "Input file. If none, stdin")
+type config struct {
+	infile string
+	input  io.Reader
+	output io.Writer
+}
+
+var infile = flag.StringP("file", "f", "stdin", "Input file. Defaults to stdin")
 
 func main() {
 	flag.Parse()
+	conf := &config{
+		infile: *infile,
+		output: os.Stdout,
+	}
+	process(conf)
+}
 
+func process(c *config) {
 	scanner := bufio.NewScanner(os.Stdin)
 
-	if *infile != "" {
-		f, err := os.Open(*infile)
-		check(err)
-		defer f.Close()
-		scanner = bufio.NewScanner(f)
+	if c.infile != "stdin" {
+		if c.infile == "test" {
+			scanner = bufio.NewScanner(c.input)
+		} else {
+			f, err := os.Open(c.infile)
+			check(err)
+			defer f.Close()
+			scanner = bufio.NewScanner(f)
+		}
 	}
 
 	for scanner.Scan() {
-		s := scanner.Text()
-		if *spacecol {
-			s = translit.CollapseSpaces(s)
-		}
-		if *unspace {
-			s = translit.Unspace(s, *spacesub)
-		}
-
-		fmt.Println(translit.Transliterate(s))
+		fmt.Fprintf(c.output, "%s\n", ud.Unidecode(scanner.Text()))
 	}
 }
 
