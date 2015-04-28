@@ -1,9 +1,10 @@
 # tl
 tl is a go command line transliteration utility.
 
-$ ./tl [-f, --file filename]
+  <pre>$ ./tl [-f, --file filename]</pre>
 
-Sample run:
-$ echo "áéíóúñ" | ./tl
-aeioun
-$ 
+# Sample run:
+  <pre>
+  $ echo "áéíóúñ" | ./tl 
+  aeioun 
+  </pre>
